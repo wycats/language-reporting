@@ -1,0 +1,15 @@
+cargo-features = ["edition"]
+
+[package]
+name = "render-tree"
+version = "0.1.0"
+authors = ["Yehuda Katz <wycats@gmail.com>"]
+edition = '2018'
+
+[dependencies]
+itertools = "0.7.8"
+termcolor = "1.0.1"
+log = "0.4.3"
+
+[dev-dependencies]
+pretty_env_logger = "0.2.4"

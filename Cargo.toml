@@ -1,0 +1,33 @@
+cargo-features = ["edition"]
+
+[package]
+name = "language-reporting"
+version = "0.1.3"
+readme = "README.md"
+license = "Apache-2.0"
+authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>"]
+description = "Diagnostic reporting support for the codespan crate"
+homepage = "https://github.com/brendanzab/codespan"
+repository = "https://github.com/brendanzab/codespan"
+documentation = "https://docs.rs/codespan-reporting"
+exclude = ["assets/**"]
+edition = "2018"
+
+[workspace]
+members = [".", "crates/render-tree"]
+
+[dependencies]
+codespan = "0.1.2"
+render-tree = { path = "./crates/render-tree", version = "0.1.0" }
+termcolor = "1.0.1"
+log = "0.4.3"
+itertools = "0.7.8"
+
+[dev-dependencies]
+structopt = "0.2.10"
+unindent = "0.1.3"
+term = "0.5.1"
+runtime-fmt = "0.3.0"
+pretty_assertions = { git = "https://github.com/Nemo157/rust-pretty-assertions", rev = "9332632" }
+regex = "1.0.2"
+pretty_env_logger = "0.2.4"

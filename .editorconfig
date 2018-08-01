@@ -1,0 +1,6 @@
+[*]
+end_of_line = lf
+
+[*.rs]
+tab_width = 4
+indent_style = space
