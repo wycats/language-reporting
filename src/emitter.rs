@@ -1,11 +1,9 @@
 use codespan::CodeMap;
 use crate::components;
 use crate::diagnostic::Diagnostic;
-use crate::{Label, Severity};
 use log;
-use render_tree::stylesheet::ColorAccumulator;
 use render_tree::{Component, Render, Stylesheet};
-use std::path::PathBuf;
+use std::path::Path;
 use std::{fmt, io};
 use termcolor::WriteColor;
 
@@ -57,14 +55,14 @@ where
 }
 
 pub trait Config: std::fmt::Debug {
-    fn filename(&self, path: PathBuf) -> String;
+    fn filename(&self, path: &Path) -> String;
 }
 
 #[derive(Debug)]
 pub struct DefaultConfig;
 
 impl Config for DefaultConfig {
-    fn filename(&self, path: PathBuf) -> String {
+    fn filename(&self, path: &Path) -> String {
         format!("{}", path.display())
     }
 }
@@ -94,10 +92,11 @@ pub fn format(f: impl Fn(&mut fmt::Formatter) -> fmt::Result) -> impl fmt::Displ
 mod default_emit_smoke_tests {
     use super::*;
     use codespan::*;
+    use crate::diagnostic::{Diagnostic, Label};
+    use crate::termcolor::Buffer;
+    use crate::Severity;
     use regex;
-    use render_tree::prelude::*;
-    use std::io::{self, Write};
-    use termcolor::{Buffer, ColorSpec};
+    use render_tree::stylesheet::ColorAccumulator;
     use unindent::unindent;
 
     fn emit_with_writer<W: WriteColor>(mut writer: W) -> W {

@@ -1,7 +1,6 @@
 use codespan::{ByteSpan, ColumnIndex, FileMap, FileName, LineIndex, LineNumber};
 use crate::diagnostic::Diagnostic;
 use crate::{Label, LabelStyle, Severity};
-use std::path::PathBuf;
 
 pub(crate) struct Message<'doc> {
     message: &'doc Option<String>,
@@ -66,6 +65,7 @@ pub(crate) fn severity(diagnostic: &Diagnostic) -> &'static str {
 pub(crate) struct SourceLine<'doc> {
     file: &'doc FileMap,
     label: &'doc Label,
+    config: &'doc dyn crate::Config,
 }
 
 impl<'doc> SourceLine<'doc> {
@@ -74,7 +74,11 @@ impl<'doc> SourceLine<'doc> {
         label: &'doc Label,
         config: &'doc dyn crate::Config,
     ) -> SourceLine<'doc> {
-        SourceLine { file, label }
+        SourceLine {
+            file,
+            label,
+            config,
+        }
     }
 
     pub(crate) fn location(&self) -> (LineIndex, ColumnIndex) {
@@ -83,8 +87,11 @@ impl<'doc> SourceLine<'doc> {
             .expect("location")
     }
 
-    pub(crate) fn filename(&self) -> &'doc FileName {
-        self.file.name()
+    pub(crate) fn filename(&self) -> String {
+        match self.file.name() {
+            FileName::Virtual(name) => format!("<{}>", name),
+            FileName::Real(name) => self.config.filename(name),
+        }
     }
 
     pub(crate) fn line_span(&self) -> ByteSpan {

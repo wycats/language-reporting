@@ -3,7 +3,6 @@
 extern crate codespan;
 extern crate language_reporting;
 extern crate render_tree;
-#[macro_use]
 extern crate structopt;
 
 use structopt::StructOpt;
