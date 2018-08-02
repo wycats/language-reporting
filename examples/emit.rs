@@ -2,9 +2,8 @@
 extern crate codespan;
 extern crate language_reporting;
 
-#[macro_use]
-extern crate structopt;
 extern crate pretty_env_logger;
+extern crate structopt;
 extern crate termcolor;
 
 use std::io::prelude::*;
