@@ -1,6 +1,7 @@
 use codespan::{ByteSpan, ColumnIndex, FileMap, FileName, LineIndex, LineNumber};
 use crate::diagnostic::Diagnostic;
 use crate::{Label, LabelStyle, Severity};
+use std::path::PathBuf;
 
 pub(crate) struct Message<'doc> {
     message: &'doc Option<String>,
@@ -68,7 +69,11 @@ pub(crate) struct SourceLine<'doc> {
 }
 
 impl<'doc> SourceLine<'doc> {
-    pub(crate) fn new(file: &'doc FileMap, label: &'doc Label) -> SourceLine<'doc> {
+    pub(crate) fn new(
+        file: &'doc FileMap,
+        label: &'doc Label,
+        config: &'doc dyn crate::Config,
+    ) -> SourceLine<'doc> {
         SourceLine { file, label }
     }
 

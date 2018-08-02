@@ -41,7 +41,7 @@ pub(crate) fn Body<'args>(data: DiagnosticData<'args>, mut into: Document) -> Do
                 into = into.add(tree! { <CodeLine args={models::Message::new(&label.message)}> })
             }
             Some(file) => {
-                let source_line = models::SourceLine::new(file, label);
+                let source_line = models::SourceLine::new(file, label, data.config);
                 let labelled_line = models::LabelledLine::new(source_line, label);
 
                 into = into.add(tree! {

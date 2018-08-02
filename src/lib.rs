@@ -39,7 +39,7 @@ mod emitter;
 mod models;
 
 pub use self::diagnostic::{Diagnostic, Label, LabelStyle};
-pub use self::emitter::{emit, format};
+pub use self::emitter::{emit, format, Config, DefaultConfig};
 pub use self::render_tree::prelude::*;
 pub use self::render_tree::stylesheet::Style;
 pub use self::render_tree::stylesheet::Stylesheet;

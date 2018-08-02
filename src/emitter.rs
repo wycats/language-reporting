@@ -5,6 +5,7 @@ use crate::{Label, Severity};
 use log;
 use render_tree::stylesheet::ColorAccumulator;
 use render_tree::{Component, Render, Stylesheet};
+use std::path::PathBuf;
 use std::{fmt, io};
 use termcolor::WriteColor;
 
@@ -12,6 +13,7 @@ pub fn emit<'doc, W>(
     writer: W,
     codemap: &'doc CodeMap,
     diagnostic: &'doc Diagnostic,
+    config: &'doc dyn Config,
 ) -> io::Result<()>
 where
     W: WriteColor,
@@ -19,6 +21,7 @@ where
     DiagnosticWriter { writer }.emit(DiagnosticData {
         codemap,
         diagnostic,
+        config,
     })
 }
 
@@ -53,10 +56,24 @@ where
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+pub trait Config: std::fmt::Debug {
+    fn filename(&self, path: PathBuf) -> String;
+}
+
+#[derive(Debug)]
+pub struct DefaultConfig;
+
+impl Config for DefaultConfig {
+    fn filename(&self, path: PathBuf) -> String {
+        format!("{}", path.display())
+    }
+}
+
+#[derive(Debug)]
 pub(crate) struct DiagnosticData<'doc> {
     pub(crate) codemap: &'doc CodeMap,
     pub(crate) diagnostic: &'doc Diagnostic,
+    pub(crate) config: &'doc dyn Config,
 }
 
 pub fn format(f: impl Fn(&mut fmt::Formatter) -> fmt::Result) -> impl fmt::Display {
@@ -115,7 +132,7 @@ mod default_emit_smoke_tests {
         let diagnostics = [error, warning];
 
         for diagnostic in &diagnostics {
-            emit(&mut writer, &code_map, &diagnostic).unwrap();
+            emit(&mut writer, &code_map, &diagnostic, &super::DefaultConfig).unwrap();
         }
 
         writer

@@ -62,7 +62,13 @@ fn main() {
 
     let writer = StandardStream::stderr(opts.color.into());
     for diagnostic in &diagnostics {
-        emit(&mut writer.lock(), &code_map, &diagnostic).unwrap();
+        // TODO: Actually configure in the config example
+        emit(
+            &mut writer.lock(),
+            &code_map,
+            &diagnostic,
+            &language_reporting::DefaultConfig,
+        ).unwrap();
         println!();
     }
 }
