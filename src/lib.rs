@@ -1,4 +1,3 @@
-#![feature(rust_2018_preview)]
 #![recursion_limit = "1024"]
 #![feature(trace_macros)]
 
@@ -14,10 +13,6 @@ extern crate log;
 
 #[cfg(test)]
 extern crate unindent;
-
-#[cfg(test)]
-#[macro_use]
-extern crate pretty_assertions;
 
 #[cfg(test)]
 extern crate pretty_env_logger;

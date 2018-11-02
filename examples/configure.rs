@@ -1,5 +1,3 @@
-#![feature(rust_2018_preview)]
-
 extern crate codespan;
 extern crate language_reporting;
 extern crate render_tree;
@@ -19,10 +17,7 @@ pub struct Opts {
         long = "color",
         parse(try_from_str),
         default_value = "auto",
-        raw(
-            possible_values = "ColorArg::VARIANTS",
-            case_insensitive = "true"
-        )
+        raw(possible_values = "ColorArg::VARIANTS", case_insensitive = "true")
     )]
     pub color: ColorArg,
 }
@@ -46,16 +41,19 @@ fn main() {
         .with_label(
             Label::new_primary(Span::from_offset(str_start, 2.into()))
                 .with_message("Expected integer but got string"),
-        ).with_label(
+        )
+        .with_label(
             Label::new_secondary(Span::from_offset(str_start, 2.into()))
                 .with_message("Expected integer but got string"),
-        ).with_code("E0001");
+        )
+        .with_code("E0001");
 
     let line_start = file_map.byte_index(2.into(), 0.into()).unwrap();
     let warning = Diagnostic::new(
         Severity::Warning,
         "`+` function has no effect unless its result is used",
-    ).with_label(Label::new_primary(Span::from_offset(line_start, 11.into())));
+    )
+    .with_label(Label::new_primary(Span::from_offset(line_start, 11.into())));
 
     let diagnostics = [error, warning];
 
@@ -67,7 +65,8 @@ fn main() {
             &code_map,
             &diagnostic,
             &language_reporting::DefaultConfig,
-        ).unwrap();
+        )
+        .unwrap();
         println!();
     }
 }

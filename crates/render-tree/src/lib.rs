@@ -1,5 +1,3 @@
-#![feature(rust_2018_preview)]
-
 //! This module defines a tree structure that you can use to build documents
 //! to render with color.
 //!
