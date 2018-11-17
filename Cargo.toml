@@ -15,7 +15,6 @@ edition = "2018"
 members = [".", "crates/render-tree"]
 
 [dependencies]
-codespan = "0.2.0"
 render-tree = { path = "./crates/render-tree", version = "0.1.0" }
 termcolor = "1.0.4"
 log = "0.4.6"

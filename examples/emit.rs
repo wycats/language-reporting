@@ -1,4 +1,3 @@
-extern crate codespan;
 extern crate language_reporting;
 
 extern crate pretty_env_logger;

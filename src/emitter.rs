@@ -1,23 +1,24 @@
-use codespan::CodeMap;
 use crate::components;
 use crate::diagnostic::Diagnostic;
+use crate::span::{ReportingFiles, ReportingSpan};
+
 use log;
 use render_tree::{Component, Render, Stylesheet};
 use std::path::Path;
 use std::{fmt, io};
 use termcolor::WriteColor;
 
-pub fn emit<'doc, W>(
+pub fn emit<'doc, W, Files: ReportingFiles>(
     writer: W,
-    codemap: &'doc CodeMap,
-    diagnostic: &'doc Diagnostic,
+    files: &'doc Files,
+    diagnostic: &'doc Diagnostic<Files::InnerSpan>,
     config: &'doc dyn Config,
 ) -> io::Result<()>
 where
     W: WriteColor,
 {
     DiagnosticWriter { writer }.emit(DiagnosticData {
-        codemap,
+        files,
         diagnostic,
         config,
     })
@@ -31,7 +32,7 @@ impl<W> DiagnosticWriter<W>
 where
     W: WriteColor,
 {
-    fn emit<'doc>(mut self, data: DiagnosticData<'doc>) -> io::Result<()> {
+    fn emit(mut self, data: DiagnosticData<'doc, impl ReportingFiles>) -> io::Result<()> {
         let document = Component(components::Diagnostic, data).into_fragment();
 
         let styles = Stylesheet::new()
@@ -68,10 +69,10 @@ impl Config for DefaultConfig {
 }
 
 #[derive(Debug)]
-pub(crate) struct DiagnosticData<'doc> {
-    pub(crate) codemap: &'doc CodeMap,
-    pub(crate) diagnostic: &'doc Diagnostic,
-    pub(crate) config: &'doc dyn Config,
+crate struct DiagnosticData<'doc, Files: ReportingFiles> {
+    crate files: &'doc Files,
+    crate diagnostic: &'doc Diagnostic<Files::InnerSpan>,
+    crate config: &'doc dyn Config,
 }
 
 pub fn format(f: impl Fn(&mut fmt::Formatter) -> fmt::Result) -> impl fmt::Display {
@@ -91,16 +92,87 @@ pub fn format(f: impl Fn(&mut fmt::Formatter) -> fmt::Result) -> impl fmt::Displ
 #[cfg(test)]
 mod default_emit_smoke_tests {
     use super::*;
-    use codespan::*;
     use crate::diagnostic::{Diagnostic, Label};
     use crate::termcolor::Buffer;
     use crate::Severity;
+
     use regex;
     use render_tree::stylesheet::ColorAccumulator;
+    use std::collections::HashMap;
     use unindent::unindent;
 
+    #[derive(Debug, Default)]
+    struct TestReportingFiles {
+        files: HashMap<String, String>,
+    }
+
+    impl TestReportingFiles {
+        fn add(&mut self, name: impl Into<String>, value: impl Into<String>) {
+            self.files.insert(name.into(), value.into());
+        }
+    }
+
+    impl crate::ReportingFiles for TestReportingFiles {
+        type InnerSpan = TestSpan;
+
+        fn byte_span(&self, from_index: usize, to_index: usize) -> Option<Self::InnerSpan> {
+            unimplemented!()
+        }
+        fn byte_index(&self, line: usize, column: usize) -> Option<usize> {
+            unimplemented!()
+        }
+        fn location(&self, index: usize) -> Option<crate::Location> {
+            unimplemented!()
+        }
+        fn line_span(&self, lineno: usize) -> Option<Self::InnerSpan> {
+            unimplemented!()
+        }
+        fn source(&self, span: &TestSpan) -> Option<&str> {
+            unimplemented!()
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct TestSpan {
+        file: String,
+        start: usize,
+        end: usize,
+    }
+
+    impl crate::ReportingSpan for TestSpan {
+        type File = ();
+
+        fn file_name(&self) -> crate::FileName {
+            crate::FileName::Verbatim(self.file.clone())
+        }
+
+        fn with_start(&self, start: usize) -> Self {
+            TestSpan {
+                file: self.file.clone(),
+                start,
+                end: self.end,
+            }
+        }
+
+        fn with_end(&self, end: usize) -> Self {
+            TestSpan {
+                file: self.file.clone(),
+                start: self.start,
+                end,
+            }
+        }
+
+        fn start(&self) -> usize {
+            self.start
+        }
+
+        fn end(&self) -> usize {
+            self.end
+        }
+    }
+
     fn emit_with_writer<W: WriteColor>(mut writer: W) -> W {
-        let mut code_map = CodeMap::new();
+        let mut files = TestReportingFiles::default();
 
         let source = unindent(
             r##"
@@ -110,28 +182,31 @@ mod default_emit_smoke_tests {
             "##,
         );
 
-        let file_map = code_map.add_filemap("test".into(), source.to_string());
+        files.add("test", source);
 
-        let str_start = file_map.byte_index(1.into(), 8.into()).unwrap();
+        let str_start = files.byte_index(1.into(), 8.into()).unwrap();
         let error = Diagnostic::new(Severity::Error, "Unexpected type in `+` application")
             .with_label(
                 Label::new_primary(Span::from_offset(str_start, 2.into()))
                     .with_message("Expected integer but got string"),
-            ).with_label(
+            )
+            .with_label(
                 Label::new_secondary(Span::from_offset(str_start, 2.into()))
                     .with_message("Expected integer but got string"),
-            ).with_code("E0001");
+            )
+            .with_code("E0001");
 
         let line_start = file_map.byte_index(1.into(), 0.into()).unwrap();
         let warning = Diagnostic::new(
             Severity::Warning,
             "`+` function has no effect unless its result is used",
-        ).with_label(Label::new_primary(Span::from_offset(line_start, 11.into())));
+        )
+        .with_label(Label::new_primary(Span::from_offset(line_start, 11.into())));
 
         let diagnostics = [error, warning];
 
         for diagnostic in &diagnostics {
-            emit(&mut writer, &code_map, &diagnostic, &super::DefaultConfig).unwrap();
+            emit(&mut writer, &files, &diagnostic, &super::DefaultConfig).unwrap();
         }
 
         writer
@@ -200,6 +275,7 @@ mod default_emit_smoke_tests {
                 let (style, line) = split_line(line, " $$");
                 let line = regex.replace_all(&line, "").to_string();
                 format!("{style}{line}\n", style = style.trim(), line = line)
-            }).collect()
+            })
+            .collect()
     }
 }

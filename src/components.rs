@@ -1,11 +1,12 @@
 #![allow(non_snake_case)]
 
 use crate::emitter::DiagnosticData;
-use crate::models;
 use crate::models::severity;
 use crate::render_tree::prelude::*;
+use crate::{models, Location};
+use crate::{ReportingFiles, ReportingSpan};
 
-pub(crate) fn Diagnostic<'args>(data: DiagnosticData<'args>, into: Document) -> Document {
+crate fn Diagnostic(data: DiagnosticData<'args, impl ReportingFiles>, into: Document) -> Document {
     let header = models::Header::new(&data.diagnostic);
 
     into.add(tree! {
@@ -16,7 +17,7 @@ pub(crate) fn Diagnostic<'args>(data: DiagnosticData<'args>, into: Document) -> 
     })
 }
 
-pub(crate) fn Header<'args>(header: models::Header<'args>, into: Document) -> Document {
+crate fn Header<'args>(header: models::Header<'args>, into: Document) -> Document {
     into.add(tree! {
         <Section name="header" as {
             <Line as {
@@ -34,58 +35,44 @@ pub(crate) fn Header<'args>(header: models::Header<'args>, into: Document) -> Do
     })
 }
 
-pub(crate) fn Body<'args>(data: DiagnosticData<'args>, mut into: Document) -> Document {
+crate fn Body(data: DiagnosticData<'args, impl ReportingSpan>, mut into: Document) -> Document {
     for label in &data.diagnostic.labels {
-        match data.codemap.find_file(label.span.start()) {
-            None => {
-                into = into.add(tree! { <CodeLine args={models::Message::new(&label.message)}> })
-            }
-            Some(file) => {
-                let source_line = models::SourceLine::new(file, label, data.config);
-                let labelled_line = models::LabelledLine::new(source_line, label);
+        let source_line = models::SourceLine::new(data.files, label, data.config);
+        let labelled_line = models::LabelledLine::new(source_line.clone(), label);
 
-                into = into.add(tree! {
-                    // - <test>:2:9
-                    <SourceCodeLocation args={source_line}>
+        into = into.add(tree! {
+            // - <test>:2:9
+            <SourceCodeLocation args={source_line}>
 
-                    // 2 | (+ test "")
-                    //   |         ^^
-                    <SourceCodeLine args={labelled_line}>
-                })
-            }
-        }
+            // 2 | (+ test "")
+            //   |         ^^
+            <SourceCodeLine args={labelled_line}>
+        });
     }
 
     into
 }
 
-pub(crate) fn CodeLine<'args>(message: models::Message<'args>, into: Document) -> Document {
-    into.add(tree! {
-        <Section name="code-line" as {
-            <Line as {
-                "- " {SomeValue(message.message())}
-            }>
-        }>
-    })
-}
-
-pub(crate) fn SourceCodeLocation(source_line: models::SourceLine, into: Document) -> Document {
-    let (line, column) = source_line.location();
+crate fn SourceCodeLocation(
+    source_line: models::SourceLine<impl ReportingSpan>,
+    into: Document,
+) -> Document {
+    let Location { line, column } = source_line.location();
     let filename = source_line.filename().to_string();
 
     into.add(tree! {
         <Section name="source-code-location" as {
             <Line as {
                 // - <test>:3:9
-                "- " {filename} ":" {line.number()}
-                ":" {column.number()}
+                "- " {filename} ":" {line}
+                ":" {column}
             }>
         }>
     })
 }
 
-pub(crate) fn SourceCodeLine<'args>(
-    model: models::LabelledLine<'args>,
+crate fn SourceCodeLine(
+    model: models::LabelledLine<'args, impl ReportingSpan>,
     into: Document,
 ) -> Document {
     let source_line = model.source_line();

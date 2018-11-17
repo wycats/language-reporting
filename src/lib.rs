@@ -1,11 +1,9 @@
 #![recursion_limit = "1024"]
-#![feature(trace_macros)]
+#![feature(trace_macros, crate_visibility_modifier, in_band_lifetimes)]
 
 #[macro_use]
 extern crate render_tree;
 
-extern crate codespan;
-extern crate itertools;
 pub extern crate termcolor;
 
 #[macro_use]
@@ -32,12 +30,13 @@ mod components;
 mod diagnostic;
 mod emitter;
 mod models;
+mod span;
 
 pub use self::diagnostic::{Diagnostic, Label, LabelStyle};
 pub use self::emitter::{emit, format, Config, DefaultConfig};
 pub use self::render_tree::prelude::*;
-pub use self::render_tree::stylesheet::Style;
-pub use self::render_tree::stylesheet::Stylesheet;
+pub use self::render_tree::stylesheet::{Style, Stylesheet};
+pub use self::span::{FileName, Location, ReportingFiles, ReportingSpan};
 pub use render_tree::macros::*;
 
 /// A severity level for diagnostic messages
