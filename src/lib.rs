@@ -30,12 +30,14 @@ mod components;
 mod diagnostic;
 mod emitter;
 mod models;
+mod simple;
 mod span;
 
 pub use self::diagnostic::{Diagnostic, Label, LabelStyle};
 pub use self::emitter::{emit, format, Config, DefaultConfig};
 pub use self::render_tree::prelude::*;
 pub use self::render_tree::stylesheet::{Style, Stylesheet};
+pub use self::simple::{SimpleFile, SimpleReportingFiles, SimpleSpan};
 pub use self::span::{FileName, Location, ReportingFiles, ReportingSpan};
 pub use render_tree::macros::*;
 

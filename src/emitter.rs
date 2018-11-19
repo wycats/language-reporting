@@ -1,6 +1,6 @@
 use crate::components;
 use crate::diagnostic::Diagnostic;
-use crate::span::{ReportingFiles, ReportingSpan};
+use crate::span::ReportingFiles;
 
 use log;
 use render_tree::{Component, Render, Stylesheet};
@@ -11,7 +11,7 @@ use termcolor::WriteColor;
 pub fn emit<'doc, W, Files: ReportingFiles>(
     writer: W,
     files: &'doc Files,
-    diagnostic: &'doc Diagnostic<Files::InnerSpan>,
+    diagnostic: &'doc Diagnostic<Files::Span>,
     config: &'doc dyn Config,
 ) -> io::Result<()>
 where
@@ -71,7 +71,7 @@ impl Config for DefaultConfig {
 #[derive(Debug)]
 crate struct DiagnosticData<'doc, Files: ReportingFiles> {
     crate files: &'doc Files,
-    crate diagnostic: &'doc Diagnostic<Files::InnerSpan>,
+    crate diagnostic: &'doc Diagnostic<Files::Span>,
     crate config: &'doc dyn Config,
 }
 
@@ -93,86 +93,16 @@ pub fn format(f: impl Fn(&mut fmt::Formatter) -> fmt::Result) -> impl fmt::Displ
 mod default_emit_smoke_tests {
     use super::*;
     use crate::diagnostic::{Diagnostic, Label};
+    use crate::simple::*;
     use crate::termcolor::Buffer;
     use crate::Severity;
 
     use regex;
     use render_tree::stylesheet::ColorAccumulator;
-    use std::collections::HashMap;
     use unindent::unindent;
 
-    #[derive(Debug, Default)]
-    struct TestReportingFiles {
-        files: HashMap<String, String>,
-    }
-
-    impl TestReportingFiles {
-        fn add(&mut self, name: impl Into<String>, value: impl Into<String>) {
-            self.files.insert(name.into(), value.into());
-        }
-    }
-
-    impl crate::ReportingFiles for TestReportingFiles {
-        type InnerSpan = TestSpan;
-
-        fn byte_span(&self, from_index: usize, to_index: usize) -> Option<Self::InnerSpan> {
-            unimplemented!()
-        }
-        fn byte_index(&self, line: usize, column: usize) -> Option<usize> {
-            unimplemented!()
-        }
-        fn location(&self, index: usize) -> Option<crate::Location> {
-            unimplemented!()
-        }
-        fn line_span(&self, lineno: usize) -> Option<Self::InnerSpan> {
-            unimplemented!()
-        }
-        fn source(&self, span: &TestSpan) -> Option<&str> {
-            unimplemented!()
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    struct TestSpan {
-        file: String,
-        start: usize,
-        end: usize,
-    }
-
-    impl crate::ReportingSpan for TestSpan {
-        type File = ();
-
-        fn file_name(&self) -> crate::FileName {
-            crate::FileName::Verbatim(self.file.clone())
-        }
-
-        fn with_start(&self, start: usize) -> Self {
-            TestSpan {
-                file: self.file.clone(),
-                start,
-                end: self.end,
-            }
-        }
-
-        fn with_end(&self, end: usize) -> Self {
-            TestSpan {
-                file: self.file.clone(),
-                start: self.start,
-                end,
-            }
-        }
-
-        fn start(&self) -> usize {
-            self.start
-        }
-
-        fn end(&self) -> usize {
-            self.end
-        }
-    }
-
     fn emit_with_writer<W: WriteColor>(mut writer: W) -> W {
-        let mut files = TestReportingFiles::default();
+        let mut files = SimpleReportingFiles::default();
 
         let source = unindent(
             r##"
@@ -182,26 +112,30 @@ mod default_emit_smoke_tests {
             "##,
         );
 
-        files.add("test", source);
+        let file = files.add("test", source);
 
-        let str_start = files.byte_index(1.into(), 8.into()).unwrap();
+        let str_start = files.byte_index(file, 1, 8).unwrap();
         let error = Diagnostic::new(Severity::Error, "Unexpected type in `+` application")
             .with_label(
-                Label::new_primary(Span::from_offset(str_start, 2.into()))
+                Label::new_primary(SimpleSpan::new(file, str_start, str_start + 2))
                     .with_message("Expected integer but got string"),
             )
             .with_label(
-                Label::new_secondary(Span::from_offset(str_start, 2.into()))
+                Label::new_secondary(SimpleSpan::new(file, str_start, str_start + 2))
                     .with_message("Expected integer but got string"),
             )
             .with_code("E0001");
 
-        let line_start = file_map.byte_index(1.into(), 0.into()).unwrap();
+        let line_start = files.byte_index(file, 1, 0).unwrap();
         let warning = Diagnostic::new(
             Severity::Warning,
             "`+` function has no effect unless its result is used",
         )
-        .with_label(Label::new_primary(Span::from_offset(line_start, 11.into())));
+        .with_label(Label::new_primary(SimpleSpan::new(
+            file,
+            line_start,
+            line_start + 11,
+        )));
 
         let diagnostics = [error, warning];
 
@@ -219,14 +153,14 @@ mod default_emit_smoke_tests {
             unindent(&format!(
                 r##"
                     error[E0001]: Unexpected type in `+` application
-                    - <test>:2:9
+                    - test:2:9
                     2 | (+ test "")
                       |         ^^ Expected integer but got string
-                    - <test>:2:9
+                    - test:2:9
                     2 | (+ test "")
                       |         -- Expected integer but got string
                     warning: `+` function has no effect unless its result is used
-                    - <test>:2:1
+                    - test:2:1
                     2 | (+ test "")
                       | ^^^^^^^^^^^
                 "##,
@@ -242,14 +176,14 @@ mod default_emit_smoke_tests {
             normalize(
                 r#"
                    {fg:Red bold bright} $$error[E0001]{bold bright}: Unexpected type in `+` application{/}
-                                        $$- <test>:2:9
+                                        $$- test:2:9
                               {fg:Cyan} $$2 | {/}(+ test {fg:Red}""{/})
                               {fg:Cyan} $$  | {/}        {fg:Red}^^ Expected integer but got string{/}
-                                        $$- <test>:2:9
+                                        $$- test:2:9
                               {fg:Cyan} $$2 | {/}(+ test {fg:Cyan}""{/})
                               {fg:Cyan} $$  | {/}        {fg:Cyan}-- Expected integer but got string{/}
                 {fg:Yellow bold bright} $$warning{bold bright}: `+` function has no effect unless its result is used{/}
-                                        $$- <test>:2:1
+                                        $$- test:2:1
                               {fg:Cyan} $$2 | {fg:Yellow}(+ test ""){/}
                               {fg:Cyan} $$  | {fg:Yellow}^^^^^^^^^^^{/}
             "#

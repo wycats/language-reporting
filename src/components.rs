@@ -3,8 +3,8 @@
 use crate::emitter::DiagnosticData;
 use crate::models::severity;
 use crate::render_tree::prelude::*;
+use crate::ReportingFiles;
 use crate::{models, Location};
-use crate::{ReportingFiles, ReportingSpan};
 
 crate fn Diagnostic(data: DiagnosticData<'args, impl ReportingFiles>, into: Document) -> Document {
     let header = models::Header::new(&data.diagnostic);
@@ -35,7 +35,7 @@ crate fn Header<'args>(header: models::Header<'args>, into: Document) -> Documen
     })
 }
 
-crate fn Body(data: DiagnosticData<'args, impl ReportingSpan>, mut into: Document) -> Document {
+crate fn Body(data: DiagnosticData<'args, impl ReportingFiles>, mut into: Document) -> Document {
     for label in &data.diagnostic.labels {
         let source_line = models::SourceLine::new(data.files, label, data.config);
         let labelled_line = models::LabelledLine::new(source_line.clone(), label);
@@ -54,7 +54,7 @@ crate fn Body(data: DiagnosticData<'args, impl ReportingSpan>, mut into: Documen
 }
 
 crate fn SourceCodeLocation(
-    source_line: models::SourceLine<impl ReportingSpan>,
+    source_line: models::SourceLine<impl ReportingFiles>,
     into: Document,
 ) -> Document {
     let Location { line, column } = source_line.location();
@@ -64,7 +64,7 @@ crate fn SourceCodeLocation(
         <Section name="source-code-location" as {
             <Line as {
                 // - <test>:3:9
-                "- " {filename} ":" {line}
+                "- " {filename} ":" {line + 1}
                 ":" {column}
             }>
         }>
@@ -72,7 +72,7 @@ crate fn SourceCodeLocation(
 }
 
 crate fn SourceCodeLine(
-    model: models::LabelledLine<'args, impl ReportingSpan>,
+    model: models::LabelledLine<'args, impl ReportingFiles>,
     into: Document,
 ) -> Document {
     let source_line = model.source_line();

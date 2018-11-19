@@ -61,18 +61,18 @@ crate fn severity(diagnostic: &Diagnostic<impl ReportingSpan>) -> &'static str {
 }
 
 #[derive(Copy, Clone, Debug)]
-crate struct SourceLine<'doc, Span: ReportingSpan> {
-    files: &'doc ReportingFiles<InnerSpan = Span>,
-    label: &'doc Label<Span>,
+crate struct SourceLine<'doc, Files: ReportingFiles> {
+    files: &'doc Files,
+    label: &'doc Label<Files::Span>,
     config: &'doc dyn crate::Config,
 }
 
-impl<Span: ReportingSpan> SourceLine<'doc, Span> {
+impl<Files: ReportingFiles> SourceLine<'doc, Files> {
     crate fn new(
-        files: &'doc ReportingFiles<InnerSpan = Span>,
-        label: &'doc Label<Span>,
+        files: &'doc Files,
+        label: &'doc Label<Files::Span>,
         config: &'doc dyn crate::Config,
-    ) -> SourceLine<'doc, Span> {
+    ) -> SourceLine<'doc, Files> {
         SourceLine {
             files,
             label,
@@ -81,22 +81,26 @@ impl<Span: ReportingSpan> SourceLine<'doc, Span> {
     }
 
     crate fn location(&self) -> Location {
+        let span = self.label.span;
+
         self.files
-            .location(self.label.span.start())
-            .expect("location")
+            .location(self.files.file_id(span), span.start())
+            .expect("A valid location")
     }
 
     crate fn filename(&self) -> String {
-        match &self.label.span.file_name() {
+        match &self.files.file_name(self.files.file_id(self.label.span)) {
             FileName::Virtual(name) => format!("<{}>", name.to_str().unwrap()),
             FileName::Real(name) => self.config.filename(name),
             FileName::Verbatim(name) => format!("{}", name),
         }
     }
 
-    crate fn line_span(&self) -> Span {
+    crate fn line_span(&self) -> Files::Span {
+        let span = self.label.span;
+
         self.files
-            .line_span(self.location().line)
+            .line_span(self.files.file_id(span), self.location().line)
             .expect("line_span")
     }
 
@@ -115,33 +119,33 @@ impl<Span: ReportingSpan> SourceLine<'doc, Span> {
 
     crate fn before_marked(&self) -> &'doc str {
         self.files
-            .source(&self.line_span().with_end(self.label.span.start()))
+            .source(self.line_span().with_end(self.label.span.start()))
             .expect("line_prefix")
     }
 
     crate fn after_marked(&self) -> &'doc str {
         self.files
-            .source(&self.line_span().with_start(self.label.span.end()))
+            .source(self.line_span().with_start(self.label.span.end()))
             .expect("line_suffix")
             .trim_right_matches(|ch| ch == '\r' || ch == '\n')
     }
 
     crate fn marked(&self) -> &'doc str {
-        self.files.source(&self.label.span).expect("line_marked")
+        self.files.source(self.label.span).expect("line_marked")
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct LabelledLine<'doc, Span: ReportingSpan> {
-    source_line: SourceLine<'doc, Span>,
-    label: &'doc Label<Span>,
+#[derive(Clone)]
+pub struct LabelledLine<'doc, Files: ReportingFiles> {
+    source_line: SourceLine<'doc, Files>,
+    label: &'doc Label<Files::Span>,
 }
 
-impl<Span: ReportingSpan> LabelledLine<'doc, Span> {
+impl<Files: ReportingFiles> LabelledLine<'doc, Files> {
     crate fn new(
-        source_line: SourceLine<'doc, Span>,
-        label: &'doc Label<Span>,
-    ) -> LabelledLine<'doc, Span> {
+        source_line: SourceLine<'doc, Files>,
+        label: &'doc Label<Files::Span>,
+    ) -> LabelledLine<'doc, Files> {
         LabelledLine { source_line, label }
     }
 
@@ -163,7 +167,7 @@ impl<Span: ReportingSpan> LabelledLine<'doc, Span> {
         self.label.message()
     }
 
-    crate fn source_line(&self) -> &SourceLine<'doc, Span> {
+    crate fn source_line(&self) -> &SourceLine<'doc, Files> {
         &self.source_line
     }
 }

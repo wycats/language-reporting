@@ -8,8 +8,9 @@ use std::io::prelude::*;
 use structopt::StructOpt;
 use termcolor::{Color, ColorSpec, WriteColor};
 
-use codespan::{CodeMap, Span};
-use language_reporting::{emit, ColorArg, Diagnostic, Label, Severity};
+use language_reporting::{
+    emit, ColorArg, Diagnostic, Label, ReportingFiles, Severity, SimpleReportingFiles, SimpleSpan,
+};
 use termcolor::StandardStream;
 
 #[derive(Debug, StructOpt)]
@@ -49,47 +50,47 @@ fn main() {
     pretty_env_logger::init();
     let opts = Opts::from_args();
 
-    let mut code_map = CodeMap::new();
+    let mut files = SimpleReportingFiles::default();
 
     let source = r##"
 (define test 123)
 (+ test "")
 ()
 "##;
-    let file_map = code_map.add_filemap("test".into(), source.to_string());
+    let file = files.add("test", source);
 
-    let str_start = file_map.byte_index(2.into(), 8.into()).unwrap();
+    let str_start = files.byte_index(file, 2, 8).unwrap();
     let error = Diagnostic::new(Severity::Error, "Unexpected type in `+` application")
         .with_label(
-            Label::new_primary(Span::from_offset(str_start, 2.into()))
+            Label::new_primary(SimpleSpan::new(file, str_start, str_start + 2))
                 .with_message("Expected integer but got string"),
         )
         .with_label(
-            Label::new_secondary(Span::from_offset(str_start, 2.into()))
+            Label::new_secondary(SimpleSpan::new(file, str_start, str_start + 2))
                 .with_message("Expected integer but got string"),
         )
         .with_code("E0001");
 
-    let line_start = file_map.byte_index(2.into(), 0.into()).unwrap();
+    let line_start = files.byte_index(file, 2, 0).unwrap();
     let warning = Diagnostic::new(
         Severity::Warning,
         "`+` function has no effect unless its result is used",
     )
-    .with_label(Label::new_primary(Span::from_offset(line_start, 11.into())));
+    .with_label(Label::new_primary(SimpleSpan::new(
+        file,
+        line_start,
+        line_start + 11,
+    )));
 
     let no_file = Diagnostic::new(Severity::Help, "Great job!");
 
-    let bogus_span = Diagnostic::new(Severity::Bug, "Something really bad went wrong").with_label(
-        Label::new_primary(Span::from_offset(150.into(), 250.into())).with_message("YIKES"),
-    );
-
-    let diagnostics = [error, warning, no_file, bogus_span];
+    let diagnostics = [error, warning, no_file];
 
     let writer = StandardStream::stderr(opts.color.into());
     for diagnostic in &diagnostics {
         emit(
             &mut writer.lock(),
-            &code_map,
+            &files,
             &diagnostic,
             &language_reporting::DefaultConfig,
         )
