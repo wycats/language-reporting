@@ -117,20 +117,21 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
     //     self.before_marked().len() + self.line_number().to_string().len()
     // }
 
-    crate fn before_marked(&self) -> &'doc str {
+    crate fn before_marked(&self) -> String {
         self.files
             .source(self.line_span().with_end(self.label.span.start()))
             .expect("line_prefix")
     }
 
-    crate fn after_marked(&self) -> &'doc str {
+    crate fn after_marked(&self) -> String {
         self.files
             .source(self.line_span().with_start(self.label.span.end()))
             .expect("line_suffix")
             .trim_right_matches(|ch| ch == '\r' || ch == '\n')
+            .to_string()
     }
 
-    crate fn marked(&self) -> &'doc str {
+    crate fn marked(&self) -> String {
         self.files.source(self.label.span).expect("line_marked")
     }
 }

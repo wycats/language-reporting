@@ -38,6 +38,5 @@ pub trait ReportingFiles: Debug + Clone {
     fn byte_index(&self, file: Self::FileId, line: usize, column: usize) -> Option<usize>;
     fn location(&self, file: Self::FileId, byte_index: usize) -> Option<Location>;
     fn line_span(&self, file: Self::FileId, lineno: usize) -> Option<Self::Span>;
-    fn file_source(&self, span: Self::FileId) -> Option<&str>;
-    fn source(&self, span: Self::Span) -> Option<&str>;
+    fn source(&self, span: Self::Span) -> Option<String>;
 }

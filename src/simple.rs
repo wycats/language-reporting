@@ -1,5 +1,3 @@
-use derive_new::new;
-
 #[derive(Debug, Clone)]
 pub struct SimpleFile {
     name: String,
@@ -34,7 +32,7 @@ impl crate::ReportingFiles for SimpleReportingFiles {
         crate::FileName::Verbatim(self.files[id].name.clone())
     }
 
-    fn byte_span(&self, file: usize, from_index: usize, to_index: usize) -> Option<Self::Span> {
+    fn byte_span(&self, _file: usize, _from_index: usize, _to_index: usize) -> Option<Self::Span> {
         unimplemented!()
     }
 
@@ -89,14 +87,10 @@ impl crate::ReportingFiles for SimpleReportingFiles {
         None
     }
 
-    fn source(&self, span: SimpleSpan) -> Option<&str> {
+    fn source(&self, span: SimpleSpan) -> Option<String> {
         let source = &self.files[span.file_id].contents;
 
-        Some(&source[span.start..span.end])
-    }
-
-    fn file_source(&self, file: usize) -> Option<&str> {
-        unimplemented!()
+        Some(source[span.start..span.end].to_string())
     }
 }
 
