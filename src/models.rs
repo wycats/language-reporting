@@ -1,20 +1,6 @@
 use crate::diagnostic::Diagnostic;
 use crate::{FileName, Label, LabelStyle, Location, ReportingFiles, ReportingSpan, Severity};
 
-crate struct Message<'doc> {
-    message: &'doc Option<String>,
-}
-
-impl<'doc> Message<'doc> {
-    crate fn new(message: &'doc Option<String>) -> Message<'doc> {
-        Message { message }
-    }
-
-    crate fn message(&self) -> &Option<String> {
-        &self.message
-    }
-}
-
 #[derive(Copy, Clone, Debug)]
 crate struct Header<'doc> {
     severity: Severity,
