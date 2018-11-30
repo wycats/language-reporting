@@ -45,7 +45,7 @@ where
             .add("** secondary", "fg: blue")
             .add("** gutter", "fg: blue");
 
-        if log_enabled!(log::Level::Debug) {
+        if log::log_enabled!(log::Level::Debug) {
             document.debug_write(&mut self.writer, &styles)?;
         }
 

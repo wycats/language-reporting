@@ -6,9 +6,6 @@ extern crate render_tree;
 
 pub extern crate termcolor;
 
-#[macro_use]
-extern crate log;
-
 #[cfg(test)]
 extern crate unindent;
 
