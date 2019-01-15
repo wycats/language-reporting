@@ -168,6 +168,7 @@ mod default_emit_smoke_tests {
         );
     }
 
+    #[cfg(windows)]
     #[test]
     fn test_color() {
         assert_eq!(
@@ -186,6 +187,30 @@ mod default_emit_smoke_tests {
                                         $$- test:2:1
                               {fg:Cyan} $$2 | {fg:Yellow}(+ test ""){/}
                               {fg:Cyan} $$  | {fg:Yellow}^^^^^^^^^^^{/}
+            "#
+            )
+        );
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_color() {
+        assert_eq!(
+            emit_with_writer(ColorAccumulator::new()).to_string(),
+
+            normalize(
+                r#"
+                   {fg:Red bold bright} $$error[E0001]{bold bright}: Unexpected type in `+` application{/}
+                                        $$- test:2:9
+                              {fg:Blue} $$2 | {/}(+ test {fg:Red}""{/})
+                              {fg:Blue} $$  | {/}        {fg:Red}^^ Expected integer but got string{/}
+                                        $$- test:2:9
+                              {fg:Blue} $$2 | {/}(+ test {fg:Blue}""{/})
+                              {fg:Blue} $$  | {/}        {fg:Blue}-- Expected integer but got string{/}
+                {fg:Yellow bold bright} $$warning{bold bright}: `+` function has no effect unless its result is used{/}
+                                        $$- test:2:1
+                              {fg:Blue} $$2 | {fg:Yellow}(+ test ""){/}
+                              {fg:Blue} $$  | {fg:Yellow}^^^^^^^^^^^{/}
             "#
             )
         );
