@@ -1,7 +1,7 @@
 [package]
 name = "render-tree"
 description = "A library for rendering trees of content to the terminal"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Yehuda Katz <wycats@gmail.com>"]
 license = "ISC"
 edition = '2018'
