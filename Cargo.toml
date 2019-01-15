@@ -3,11 +3,11 @@ name = "language-reporting"
 version = "0.2.0"
 readme = "README.md"
 license = "Apache-2.0"
-authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>"]
-description = "Diagnostic reporting support for the codespan crate"
-homepage = "https://github.com/brendanzab/codespan"
-repository = "https://github.com/brendanzab/codespan"
-documentation = "https://docs.rs/codespan-reporting"
+authors = ["Yehuda Katz <wycats@gmail.com>", "Brendan Zabarauskas <bjzaba@yahoo.com.au>"]
+description = "Diagnostic reporting for programming languages"
+homepage = "https://github.com/wycats/language-reporting"
+repository = "https://github.com/wycats/language-reporting"
+documentation = "https://docs.rs/language-reporting"
 exclude = ["assets/**"]
 edition = "2018"
 
