@@ -22,6 +22,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::str::FromStr;
 use termcolor::ColorChoice;
+use serde_derive::{Serialize, Deserialize};
 
 mod components;
 mod diagnostic;
@@ -50,7 +51,7 @@ pub use render_tree::macros::*;
 /// assert!(Severity::Warning > Severity::Note);
 /// assert!(Severity::Note > Severity::Help);
 /// ```
-#[derive(Copy, Clone, PartialEq, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Hash, Debug, Serialize, Deserialize)]
 pub enum Severity {
     /// An unexpected bug.
     Bug,

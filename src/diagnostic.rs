@@ -1,7 +1,8 @@
 use crate::{ReportingSpan, Severity};
+use serde_derive::{Serialize, Deserialize};
 
 /// A style for the label
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum LabelStyle {
     /// The main focus of the diagnostic
     Primary,
@@ -10,7 +11,7 @@ pub enum LabelStyle {
 }
 
 /// A label describing an underlined region of code associated with a diagnostic
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Label<Span: ReportingSpan> {
     /// The span we are going to include in the final snippet.
     pub span: Span,
@@ -48,7 +49,7 @@ impl<Span: ReportingSpan> Label<Span> {
 }
 
 /// Represents a diagnostic message and associated child messages.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Diagnostic<Span: ReportingSpan> {
     /// The overall severity of the diagnostic
     pub severity: Severity,

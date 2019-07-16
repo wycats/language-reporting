@@ -113,7 +113,7 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
         self.files
             .source(self.line_span().with_start(self.label.span.end()))
             .expect("line_suffix")
-            .trim_right_matches(|ch| ch == '\r' || ch == '\n')
+            .trim_end_matches(|ch| ch == '\r' || ch == '\n')
             .to_string()
     }
 
