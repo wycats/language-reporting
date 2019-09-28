@@ -53,7 +53,7 @@ pub(crate) struct SourceLine<'doc, Files: ReportingFiles> {
     config: &'doc dyn crate::Config,
 }
 
-impl<Files: ReportingFiles> SourceLine<'doc, Files> {
+impl<'doc, Files: ReportingFiles> SourceLine<'doc, Files> {
     pub(crate) fn new(
         files: &'doc Files,
         label: &'doc Label<Files::Span>,
@@ -128,7 +128,7 @@ pub struct LabelledLine<'doc, Files: ReportingFiles> {
     label: &'doc Label<Files::Span>,
 }
 
-impl<Files: ReportingFiles> LabelledLine<'doc, Files> {
+impl<'doc, Files: ReportingFiles> LabelledLine<'doc, Files> {
     pub(crate) fn new(
         source_line: SourceLine<'doc, Files>,
         label: &'doc Label<Files::Span>,

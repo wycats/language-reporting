@@ -1,5 +1,4 @@
 #![recursion_limit = "1024"]
-#![feature(in_band_lifetimes)]
 
 #[macro_use]
 extern crate render_tree;

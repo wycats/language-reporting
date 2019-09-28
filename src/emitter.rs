@@ -32,7 +32,7 @@ impl<W> DiagnosticWriter<W>
 where
     W: WriteColor,
 {
-    fn emit(mut self, data: DiagnosticData<'doc, impl ReportingFiles>) -> io::Result<()> {
+    fn emit<'doc>(mut self, data: DiagnosticData<'doc, impl ReportingFiles>) -> io::Result<()> {
         let document = Component(components::Diagnostic, data).into_fragment();
 
         let styles = Stylesheet::new()

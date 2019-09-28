@@ -6,7 +6,7 @@ use crate::render_tree::prelude::*;
 use crate::ReportingFiles;
 use crate::{models, Location};
 
-pub(crate) fn Diagnostic(data: DiagnosticData<'args, impl ReportingFiles>, into: Document) -> Document {
+pub(crate) fn Diagnostic<'args>(data: DiagnosticData<'args, impl ReportingFiles>, into: Document) -> Document {
     let header = models::Header::new(&data.diagnostic);
 
     into.add(tree! {
@@ -35,7 +35,7 @@ pub(crate) fn Header<'args>(header: models::Header<'args>, into: Document) -> Do
     })
 }
 
-pub(crate) fn Body(data: DiagnosticData<'args, impl ReportingFiles>, mut into: Document) -> Document {
+pub(crate) fn Body<'args>(data: DiagnosticData<'args, impl ReportingFiles>, mut into: Document) -> Document {
     for label in &data.diagnostic.labels {
         let source_line = models::SourceLine::new(data.files, label, data.config);
         let labelled_line = models::LabelledLine::new(source_line.clone(), label);
@@ -71,7 +71,7 @@ pub(crate) fn SourceCodeLocation(
     })
 }
 
-pub(crate) fn SourceCodeLine(
+pub(crate) fn SourceCodeLine<'args>(
     model: models::LabelledLine<'args, impl ReportingFiles>,
     into: Document,
 ) -> Document {
