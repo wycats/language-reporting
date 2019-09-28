@@ -2,14 +2,14 @@ use crate::diagnostic::Diagnostic;
 use crate::{FileName, Label, LabelStyle, Location, ReportingFiles, ReportingSpan, Severity};
 
 #[derive(Copy, Clone, Debug)]
-crate struct Header<'doc> {
+pub(crate) struct Header<'doc> {
     severity: Severity,
     code: Option<&'doc str>,
     message: &'doc str,
 }
 
 impl<'doc> Header<'doc> {
-    crate fn new(diagnostic: &'doc Diagnostic<impl ReportingSpan>) -> Header<'doc> {
+    pub(crate) fn new(diagnostic: &'doc Diagnostic<impl ReportingSpan>) -> Header<'doc> {
         Header {
             severity: diagnostic.severity,
             code: diagnostic.code.as_ref().map(|c| &c[..]),
@@ -17,7 +17,7 @@ impl<'doc> Header<'doc> {
         }
     }
 
-    crate fn severity(&self) -> &'static str {
+    pub(crate) fn severity(&self) -> &'static str {
         match self.severity {
             Severity::Bug => "bug",
             Severity::Error => "error",
@@ -27,16 +27,16 @@ impl<'doc> Header<'doc> {
         }
     }
 
-    crate fn code(&self) -> &Option<&'doc str> {
+    pub(crate) fn code(&self) -> &Option<&'doc str> {
         &self.code
     }
 
-    crate fn message(&self) -> String {
+    pub(crate) fn message(&self) -> String {
         self.message.to_string()
     }
 }
 
-crate fn severity(diagnostic: &Diagnostic<impl ReportingSpan>) -> &'static str {
+pub(crate) fn severity(diagnostic: &Diagnostic<impl ReportingSpan>) -> &'static str {
     match diagnostic.severity {
         Severity::Bug => "bug",
         Severity::Error => "error",
@@ -47,14 +47,14 @@ crate fn severity(diagnostic: &Diagnostic<impl ReportingSpan>) -> &'static str {
 }
 
 #[derive(Copy, Clone, Debug)]
-crate struct SourceLine<'doc, Files: ReportingFiles> {
+pub(crate) struct SourceLine<'doc, Files: ReportingFiles> {
     files: &'doc Files,
     label: &'doc Label<Files::Span>,
     config: &'doc dyn crate::Config,
 }
 
-impl<Files: ReportingFiles> SourceLine<'doc, Files> {
-    crate fn new(
+impl<'doc, Files: ReportingFiles> SourceLine<'doc, Files> {
+    pub(crate) fn new(
         files: &'doc Files,
         label: &'doc Label<Files::Span>,
         config: &'doc dyn crate::Config,
@@ -66,7 +66,7 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
         }
     }
 
-    crate fn location(&self) -> Location {
+    pub(crate) fn location(&self) -> Location {
         let span = self.label.span;
 
         self.files
@@ -74,7 +74,7 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
             .expect("A valid location")
     }
 
-    crate fn filename(&self) -> String {
+    pub(crate) fn filename(&self) -> String {
         match &self.files.file_name(self.files.file_id(self.label.span)) {
             FileName::Virtual(name) => format!("<{}>", name.to_str().unwrap()),
             FileName::Real(name) => self.config.filename(name),
@@ -82,7 +82,7 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
         }
     }
 
-    crate fn line_span(&self) -> Files::Span {
+    pub(crate) fn line_span(&self) -> Files::Span {
         let span = self.label.span;
 
         self.files
@@ -90,26 +90,26 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
             .expect("line_span")
     }
 
-    crate fn line_number(&self) -> usize {
+    pub(crate) fn line_number(&self) -> usize {
         self.location().line + 1
     }
 
-    crate fn line_number_len(&self) -> usize {
+    pub(crate) fn line_number_len(&self) -> usize {
         self.line_number().to_string().len()
     }
 
-    // crate fn before_line_len(&self) -> usize {
+    // pub(crate) fn before_line_len(&self) -> usize {
     //     // TODO: Improve
     //     self.before_marked().len() + self.line_number().to_string().len()
     // }
 
-    crate fn before_marked(&self) -> String {
+    pub(crate) fn before_marked(&self) -> String {
         self.files
             .source(self.line_span().with_end(self.label.span.start()))
             .expect("line_prefix")
     }
 
-    crate fn after_marked(&self) -> String {
+    pub(crate) fn after_marked(&self) -> String {
         self.files
             .source(self.line_span().with_start(self.label.span.end()))
             .expect("line_suffix")
@@ -117,7 +117,7 @@ impl<Files: ReportingFiles> SourceLine<'doc, Files> {
             .to_string()
     }
 
-    crate fn marked(&self) -> String {
+    pub(crate) fn marked(&self) -> String {
         self.files.source(self.label.span).expect("line_marked")
     }
 }
@@ -128,33 +128,33 @@ pub struct LabelledLine<'doc, Files: ReportingFiles> {
     label: &'doc Label<Files::Span>,
 }
 
-impl<Files: ReportingFiles> LabelledLine<'doc, Files> {
-    crate fn new(
+impl<'doc, Files: ReportingFiles> LabelledLine<'doc, Files> {
+    pub(crate) fn new(
         source_line: SourceLine<'doc, Files>,
         label: &'doc Label<Files::Span>,
     ) -> LabelledLine<'doc, Files> {
         LabelledLine { source_line, label }
     }
 
-    crate fn mark(&self) -> &'static str {
+    pub(crate) fn mark(&self) -> &'static str {
         match self.label.style {
             LabelStyle::Primary => "^",
             LabelStyle::Secondary => "-",
         }
     }
 
-    crate fn style(&self) -> &'static str {
+    pub(crate) fn style(&self) -> &'static str {
         match self.label.style {
             LabelStyle::Primary => "primary",
             LabelStyle::Secondary => "secondary",
         }
     }
 
-    crate fn message(&self) -> &Option<String> {
+    pub(crate) fn message(&self) -> &Option<String> {
         self.label.message()
     }
 
-    crate fn source_line(&self) -> &SourceLine<'doc, Files> {
+    pub(crate) fn source_line(&self) -> &SourceLine<'doc, Files> {
         &self.source_line
     }
 }

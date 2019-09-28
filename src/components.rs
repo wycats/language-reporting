@@ -6,7 +6,7 @@ use crate::render_tree::prelude::*;
 use crate::ReportingFiles;
 use crate::{models, Location};
 
-crate fn Diagnostic(data: DiagnosticData<'args, impl ReportingFiles>, into: Document) -> Document {
+pub(crate) fn Diagnostic<'args>(data: DiagnosticData<'args, impl ReportingFiles>, into: Document) -> Document {
     let header = models::Header::new(&data.diagnostic);
 
     into.add(tree! {
@@ -17,7 +17,7 @@ crate fn Diagnostic(data: DiagnosticData<'args, impl ReportingFiles>, into: Docu
     })
 }
 
-crate fn Header<'args>(header: models::Header<'args>, into: Document) -> Document {
+pub(crate) fn Header<'args>(header: models::Header<'args>, into: Document) -> Document {
     into.add(tree! {
         <Section name="header" as {
             <Line as {
@@ -35,7 +35,7 @@ crate fn Header<'args>(header: models::Header<'args>, into: Document) -> Documen
     })
 }
 
-crate fn Body(data: DiagnosticData<'args, impl ReportingFiles>, mut into: Document) -> Document {
+pub(crate) fn Body<'args>(data: DiagnosticData<'args, impl ReportingFiles>, mut into: Document) -> Document {
     for label in &data.diagnostic.labels {
         let source_line = models::SourceLine::new(data.files, label, data.config);
         let labelled_line = models::LabelledLine::new(source_line.clone(), label);
@@ -53,7 +53,7 @@ crate fn Body(data: DiagnosticData<'args, impl ReportingFiles>, mut into: Docume
     into
 }
 
-crate fn SourceCodeLocation(
+pub(crate) fn SourceCodeLocation(
     source_line: models::SourceLine<impl ReportingFiles>,
     into: Document,
 ) -> Document {
@@ -71,7 +71,7 @@ crate fn SourceCodeLocation(
     })
 }
 
-crate fn SourceCodeLine(
+pub(crate) fn SourceCodeLine<'args>(
     model: models::LabelledLine<'args, impl ReportingFiles>,
     into: Document,
 ) -> Document {
