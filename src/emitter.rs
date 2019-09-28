@@ -69,10 +69,10 @@ impl Config for DefaultConfig {
 }
 
 #[derive(Debug)]
-crate struct DiagnosticData<'doc, Files: ReportingFiles> {
-    crate files: &'doc Files,
-    crate diagnostic: &'doc Diagnostic<Files::Span>,
-    crate config: &'doc dyn Config,
+pub(crate) struct DiagnosticData<'doc, Files: ReportingFiles> {
+    pub(crate) files: &'doc Files,
+    pub(crate) diagnostic: &'doc Diagnostic<Files::Span>,
+    pub(crate) config: &'doc dyn Config,
 }
 
 pub fn format(f: impl Fn(&mut fmt::Formatter) -> fmt::Result) -> impl fmt::Display {
